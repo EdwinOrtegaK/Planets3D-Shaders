@@ -1,4 +1,4 @@
-use nalgebra_glm::{Vec3, dot};
+use nalgebra_glm::{Vec2, Vec3, dot};
 use crate::fragment::Fragment;
 use crate::vertex::Vertex;
 use crate::line::line;
@@ -24,7 +24,7 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
   
     let triangle_area = edge_function(&a, &b, &c);
   
-    // Iterate over each pixel in the bounding box
+    //  Iterar sobre cada píxel en el cuadro delimitador
     for y in min_y..=max_y {
       for x in min_x..=max_x {
         let point = Vec3::new(x as f32 + 0.5, y as f32 + 0.5, 0.0);
@@ -34,22 +34,26 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
         //verificación del punto
         if w1 >= 0.0 && w1 <= 1.0 && 
            w2 >= 0.0 && w2 <= 1.0 &&
-           w3 >= 0.0 && w3 <= 1.0 {
-          let normal = v1.transformed_normal;
-          let normal = normal.normalize();
-          let intensity = dot(&normal, &light_dir).max(0.0);
-  
-          let base_color = Color::new(100, 100, 100); // gris
-          let lit_color = base_color * intensity;
-  
-          let depth = a.z;
-  
-          fragments.push(Fragment::new(x as f32, y as f32, lit_color, depth));
+           w3 >= 0.0 && w3 <= 1.0 { 
+            let normal = v1.transformed_normal * w1 + v2.transformed_normal * w2 + v3.transformed_normal * w3;
+            let normal = normal.normalize();
+            let intensity = dot(&normal, &light_dir).max(0.0);
+
+            let base_color = Color::new(153, 101, 21); // gris
+            let depth = a.z * w1 + b.z * w2 + c.z * w3;
+
+            fragments.push(Fragment::new(
+                Vec2::new(x as f32, y as f32),
+                base_color,
+                depth,
+                normal,
+                intensity,
+            ));
         }
       }
     }
-  
-    fragments
+
+  fragments
 }
 
 fn calculate_bounding_box(v1: &Vec3, v2: &Vec3, v3: &Vec3) -> (i32, i32, i32, i32) {
