@@ -24,51 +24,48 @@ impl Fragment {
     }
 }
 
-pub fn fragment_shader(fragment: &Fragment, _uniforms: &Uniforms) -> Color {
-    // Opción 1: Líneas horizontales de colores
-    let y = fragment.position.y as usize;
+pub fn fragment_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+    // Opción 1: Cambio de color a través del tiempo
     let colors = [
         Color::new(255, 0, 0),   // Rojo
         Color::new(0, 255, 0),   // Verde
         Color::new(0, 0, 255),   // Azul
         Color::new(255, 255, 0), // Amarillo
+        Color::new(255, 0, 255), // Magenta
+        Color::new(0, 255, 255), // Cian
     ];
-    let stripe_width = 20;
-    let stripe_index = (y / stripe_width) % colors.len();
+    let frames_per_color = 100;
+    let color_index = (uniforms.time / frames_per_color) as usize % colors.len();
+    let transition_progress = (uniforms.time % frames_per_color) as f32 / frames_per_color as f32;
+    let current_color = colors[color_index];
+    let next_color = colors[(color_index + 1) % colors.len()];
+    let time_based_color = current_color.lerp(&next_color, transition_progress) * fragment.intensity;
 
-    // Opción 2: Interpolación con la posición del vértice
-    let vertex_y = fragment.vertex_position.y as usize;
-    let vertex_based_color = if vertex_y % 40 > 20 {
-        colors[stripe_index] * 0.8 // Banda más oscura usando posición del vértice
-    } else {
-        colors[stripe_index]
-    };
+    // Opción 2: Líneas horizontales en movimiento con el tiempo
+    let color1 = Color::new(255, 0, 0); // Rojo
+    let color2 = Color::new(0, 0, 255); // Azul
+    let stripe_width = 0.2;
+    let speed = 0.002;
+    let moving_y = fragment.vertex_position.y + uniforms.time as f32 * speed;
+    let stripe_factor = ((moving_y / stripe_width) * std::f32::consts::PI).sin() * 0.5 + 0.5;
+    let moving_stripes_color = color1.lerp(&color2, stripe_factor) * fragment.intensity;
 
-    // Opción 3: Interpolación lineal (lerp) entre franjas de color
-    let stripe_coord = fragment.vertex_position.y;
-    let stripe_float = (stripe_coord / 0.1).abs();
-    let lerp_index = (stripe_float as usize) % colors.len();
-    let next_index = (lerp_index + 1) % colors.len();
-    let t = stripe_float.fract();
-    let lerped_color = colors[lerp_index].lerp(&colors[next_index], t) * fragment.intensity;
-
-    // Opción 4: Patrones trigonométricos
-    let color1 = Color::new(255, 0, 0);   // Rojo
-    let color2 = Color::new(0, 255, 0);   // Verde
-    let color3 = Color::new(0, 0, 255);   // Azul
-    let x = fragment.vertex_position.x;
-    let y = fragment.vertex_position.y;
-    let frequency = 10.0;
-    let wave1 = (x * 7.0 * frequency + y * 5.0 * frequency).sin() * 0.5 + 0.5;
-    let wave2 = (x * 5.0 * frequency - y * 8.0 * frequency + std::f32::consts::PI / 3.0).sin() * 0.5 + 0.5;
-    let wave3 = (y * 6.0 * frequency + x * 4.0 * frequency + 2.0 * std::f32::consts::PI / 3.0).sin() * 0.5 + 0.5;
-    let mut final_trig_color = color1.lerp(&color2, wave1);
-    final_trig_color = final_trig_color.lerp(&color3, wave2);
-    final_trig_color = final_trig_color.lerp(&color1, wave3);
+    // Opción 3: Patrón de puntos en movimiento
+    let background_color = Color::new(250, 250, 250); // Gris claro
+    let dot_color = Color::new(255, 0, 0);            // Rojo
+    let dot_size = 0.1;
+    let dot_spacing = 0.3;
+    let speed = 0.01;
+    let moving_x = fragment.vertex_position.x + uniforms.time as f32 * speed;
+    let moving_y = fragment.vertex_position.y - uniforms.time as f32 * speed * 0.5;
+    let pattern_x = ((moving_x / dot_spacing) * 2.0 * std::f32::consts::PI).cos();
+    let pattern_y = ((moving_y / dot_spacing) * 2.0 * std::f32::consts::PI).cos();
+    let dot_pattern = (pattern_x * pattern_y).max(0.0);
+    let dot_factor = (dot_pattern - (1.0 - dot_size)).max(0.0) / dot_size;
+    let moving_dots_color = background_color.lerp(&dot_color, dot_factor) * fragment.intensity;
 
     // Elige el return que deseas probar
-    // return colors[stripe_index];          // Opción 1: Líneas horizontales
-    // return vertex_based_color;            // Opción 2: Posición del vértice
-    // return lerped_color;                  // Opción 3: Interpolación lerp
-    return final_trig_color;                 // Opción 4: Patrones trigonométricos
+    // return time_based_color;          // Opción 1: Cambio de color con el tiempo
+    // return moving_stripes_color;      // Opción 2: Líneas en movimiento
+    return moving_dots_color;            // Opción 3: Patrón de puntos en movimiento
 }

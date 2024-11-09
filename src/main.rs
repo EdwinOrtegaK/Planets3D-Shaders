@@ -21,6 +21,10 @@ use crate::fragment::fragment_shader;
 
 pub struct Uniforms {
     model_matrix: Mat4,
+    view_matrix: Mat4,
+    projection_matrix: Mat4,
+    viewport_matrix: Mat4,
+    time: u32
 }
 
 fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
@@ -127,17 +131,26 @@ fn main() {
     let obj = Obj::load("assets/sphere.obj").expect("Failed to load obj");
     let vertex_arrays = obj.get_vertex_array(); 
 
+    let mut time = 0;
+
     while window.is_open() {
         if window.is_key_down(Key::Escape) {
             break;
         }
+        time += 1;
 
         handle_input(&window, &mut translation, &mut rotation, &mut scale);
 
         framebuffer.clear();
 
         let model_matrix = create_model_matrix(translation, scale, rotation);
-        let uniforms = Uniforms { model_matrix };
+        let uniforms = Uniforms { 
+            model_matrix, 
+            view_matrix: Mat4::identity(), 
+            projection_matrix: Mat4::identity(), 
+            viewport_matrix: Mat4::identity(), 
+            time 
+        };
 
         framebuffer.set_current_color(0xFFDDDD);
         render(&mut framebuffer, &uniforms, &vertex_arrays);
