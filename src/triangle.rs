@@ -42,13 +42,16 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
             let base_color = Color::new(153, 101, 21); // gris
             let depth = a.z * w1 + b.z * w2 + c.z * w3;
 
+            let vertex_position = v1.position * w1 + v2.position * w2 + v3.position * w3;
+
             fragments.push(Fragment::new(
-                Vec2::new(x as f32, y as f32),
-                base_color,
-                depth,
-                normal,
-                intensity,
-            ));
+              Vec2::new(x as f32, y as f32),
+              base_color,
+              depth,
+              normal,
+              intensity,
+              vertex_position
+          ));
         }
       }
     }

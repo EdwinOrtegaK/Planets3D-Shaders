@@ -33,7 +33,8 @@ pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
             Color::new(255, 255, 255),
             z,
             normal_vector,
-            intensity_value 
+            intensity_value ,
+            start
         ));
 
         if x0 == x1 && y0 == y1 { break; }
