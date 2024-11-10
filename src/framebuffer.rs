@@ -55,7 +55,7 @@ impl Framebuffer {
             let y = fragment.position.y as usize;
             if x < self.width && y < self.height {
                 // Llamada al fragment shader para calcular el color ajustado
-                let shaded_color = fragment_shader(&fragment, uniforms, "", "");
+                let shaded_color = fragment_shader(&fragment, uniforms, "static_pattern");
                 let color = shaded_color.to_hex();
                 
                 // Configura el color actual del framebuffer y dibuja el punto

@@ -2,6 +2,9 @@ use nalgebra_glm::{Vec2, Vec3};
 use std::f32::consts::PI;
 use crate::color::Color;
 use crate::Uniforms;
+use rand::prelude::*;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 pub struct Fragment {
     pub position: Vec2,
@@ -140,15 +143,67 @@ pub fn neon_light_shader(fragment: &Fragment) -> Color {
     blended_glow.blend_add(&core)
 }
 
-
-pub fn fragment_shader(fragment: &Fragment, uniforms: &Uniforms, shader_type: &str, blend_mode: &str) -> Color {
-    match shader_type {
-        "static_pattern" => static_pattern_shader(fragment),
-        "moving_circles" => moving_circles_shader(fragment, uniforms),
-        "combined" => combined_shader(fragment, uniforms),
-        "purple_circle_blend" => combined_blend_shader(fragment, blend_mode),
-        "neon_light" => neon_light_shader(fragment),
-        _ => Color::new(0, 0, 0), // Color negro en caso de que no se especifique un shader válido
-    }
+fn random_color_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+    let seed = uniforms.time as u64;
+    let mut rng = StdRng::seed_from_u64(seed);
+    let r = rng.gen_range(0..=255);
+    let g = rng.gen_range(0..=255);
+    let b = rng.gen_range(0..=255);
+    Color::new(r, g, b) * fragment.intensity
 }
 
+fn panda_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+    let zoom = 50.0;
+    let x = fragment.vertex_position.x;
+    let y = fragment.vertex_position.y;
+    let noise_value = uniforms.noise.get_noise_2d(x * zoom, y * zoom);
+    let spot_threshold = 0.5;
+    let spot_color = Color::new(255, 255, 255);
+    let base_color = Color::new(0, 0, 0);
+
+    (if noise_value < spot_threshold { spot_color } else { base_color }) * fragment.intensity
+}
+
+fn cloud_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+    let zoom = 100.0;
+    let x = fragment.vertex_position.x;
+    let y = fragment.vertex_position.y;
+    let t = uniforms.time as f32 * 0.5;
+    let noise_value = uniforms.noise.get_noise_2d(x * zoom + t, y * zoom);
+    let cloud_threshold = 0.5;
+    let cloud_color = Color::new(255, 255, 255);
+    let sky_color = Color::new(30, 97, 145);
+
+    (if noise_value > cloud_threshold { cloud_color } else { sky_color }) * fragment.intensity
+}
+
+fn cellular_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+    let zoom = 30.0;
+    let x = fragment.vertex_position.x;
+    let y = fragment.vertex_position.y;
+    let cell_noise_value = uniforms.noise.get_noise_2d(x * zoom, y * zoom).abs();
+    let cell_color_1 = Color::new(85, 107, 47);
+    let cell_color_2 = Color::new(124, 252, 0);
+    let cell_color_3 = Color::new(34, 139, 34);
+    let cell_color_4 = Color::new(173, 255, 47);
+
+    (if cell_noise_value < 0.15 {
+        cell_color_1
+    } else if cell_noise_value < 0.7 {
+        cell_color_2
+    } else if cell_noise_value < 0.75 {
+        cell_color_3
+    } else {
+        cell_color_4
+    }) * fragment.intensity
+}
+
+pub fn fragment_shader(fragment: &Fragment, uniforms: &Uniforms, shader_type: &str) -> Color {
+    match shader_type {
+        "random_color" => random_color_shader(fragment, uniforms),
+        "panda" => panda_shader(fragment, uniforms),
+        "cloud" => cloud_shader(fragment, uniforms),
+        "cellular" => cellular_shader(fragment, uniforms),
+        _ => Color::new(0, 0, 0),
+    }
+}

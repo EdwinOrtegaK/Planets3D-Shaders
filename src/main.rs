@@ -17,6 +17,7 @@ use vertex::Vertex;
 use obj::Obj;
 use triangle::triangle;
 use shaders::vertex_shader;
+use fastnoise_lite::{FastNoiseLite, NoiseType};
 use crate::fragment::fragment_shader;
 
 pub struct Uniforms {
@@ -24,7 +25,8 @@ pub struct Uniforms {
     view_matrix: Mat4,
     projection_matrix: Mat4,
     viewport_matrix: Mat4,
-    time: u32
+    time: u32,
+    noise: FastNoiseLite
 }
 
 fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
@@ -94,13 +96,19 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
         let y = fragment.position.y as usize;
         if x < framebuffer.width && y < framebuffer.height {
             // Llama a fragment_shader para calcular el color final del fragmento
-            let shaded_color = fragment_shader(&fragment, uniforms, "static_pattern", "normal");
+            let shaded_color = fragment_shader(&fragment, uniforms, "cloud");
             let color = shaded_color.to_hex();
             framebuffer.set_current_color(color);
             framebuffer.point(x, y, fragment.depth);
         }
     }
     
+}
+
+fn create_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(1337);
+    noise.set_noise_type(Some(NoiseType::OpenSimplex2));
+    noise
 }
 
 fn main() {
@@ -144,12 +152,14 @@ fn main() {
         framebuffer.clear();
 
         let model_matrix = create_model_matrix(translation, scale, rotation);
-        let uniforms = Uniforms { 
-            model_matrix, 
-            view_matrix: Mat4::identity(), 
-            projection_matrix: Mat4::identity(), 
-            viewport_matrix: Mat4::identity(), 
-            time 
+        let noise = create_noise();
+        let uniforms = Uniforms {
+            model_matrix,
+            view_matrix: Mat4::identity(),
+            projection_matrix: Mat4::identity(),
+            viewport_matrix: Mat4::identity(),
+            time,
+            noise
         };
 
         framebuffer.set_current_color(0xFFDDDD);
