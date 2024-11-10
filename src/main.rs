@@ -11,6 +11,7 @@ mod obj;
 mod color;
 mod fragment;
 mod shaders;
+mod experimental_shaders;
 
 use framebuffer::Framebuffer;
 use vertex::Vertex;
@@ -67,7 +68,7 @@ fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
     transform_matrix * rotation_matrix
 }
 
-fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Vertex]) {
+fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Vertex], shader_type: &str) {
     // Vertex Shader Stage
     let mut transformed_vertices = Vec::with_capacity(vertex_array.len());
     for vertex in vertex_array {
@@ -96,7 +97,7 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
         let y = fragment.position.y as usize;
         if x < framebuffer.width && y < framebuffer.height {
             // Llama a fragment_shader para calcular el color final del fragmento
-            let shaded_color = fragment_shader(&fragment, uniforms, "cloud");
+            let shaded_color = fragment_shader(&fragment, uniforms, shader_type);
             let color = shaded_color.to_hex();
             framebuffer.set_current_color(color);
             framebuffer.point(x, y, fragment.depth);
@@ -141,6 +142,14 @@ fn main() {
 
     let mut time = 0;
 
+    // Añadimos las constantes para identificar los cuerpos celestes
+    const STAR: u8 = 1;
+    const ROCKY_PLANET: u8 = 2;
+    const GAS_GIANT: u8 = 3;
+
+    // Variable para guardar el cuerpo celeste seleccionado
+    let mut selected_object: u8 = STAR;
+
     while window.is_open() {
         if window.is_key_down(Key::Escape) {
             break;
@@ -148,6 +157,15 @@ fn main() {
         time += 1;
 
         handle_input(&window, &mut translation, &mut rotation, &mut scale);
+
+        // Cambiamos el objeto seleccionado con teclas
+        if window.is_key_down(Key::Key1) {
+            selected_object = STAR;
+        } else if window.is_key_down(Key::Key2) {
+            selected_object = ROCKY_PLANET;
+        } else if window.is_key_down(Key::Key3) {
+            selected_object = GAS_GIANT;
+        }
 
         framebuffer.clear();
 
@@ -162,8 +180,22 @@ fn main() {
             noise
         };
 
-        framebuffer.set_current_color(0xFFDDDD);
-        render(&mut framebuffer, &uniforms, &vertex_arrays);
+        // Renderizamos el objeto seleccionado con shaders específicos
+        match selected_object {
+            STAR => {
+                framebuffer.set_current_color(0xFFDDDD);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "solar_surface");
+            },
+            ROCKY_PLANET => {
+                framebuffer.set_current_color(0xAAAAAA);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "rocky_planet_shader");
+            },
+            GAS_GIANT => {
+                framebuffer.set_current_color(0x00FFAA);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "gas_giant_shader");
+            },
+            _ => {},
+        }
 
         window
             .update_with_buffer(&framebuffer.buffer, framebuffer_width, framebuffer_height)
