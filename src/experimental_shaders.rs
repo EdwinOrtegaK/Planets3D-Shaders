@@ -5,28 +5,7 @@ use crate::Uniforms;
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-
-pub struct Fragment {
-    pub position: Vec2,
-    pub color: Color,
-    pub depth: f32,
-    pub normal: Vec3,
-    pub intensity: f32,
-    pub vertex_position: Vec3
-}
-
-impl Fragment {
-    pub fn new(position: Vec2, color: Color, depth: f32, normal: Vec3, intensity: f32, vertex_position: Vec3) -> Self {
-        Fragment {
-            position,
-            color,
-            depth,
-            normal,
-            intensity,
-            vertex_position
-        }
-    }
-}
+use crate::fragment::Fragment;
 
 fn static_pattern_shader(fragment: &Fragment) -> Color {
     let x = fragment.vertex_position.x;
@@ -143,7 +122,7 @@ pub fn neon_light_shader(fragment: &Fragment) -> Color {
     blended_glow.blend_add(&core)
 }
 
-fn random_color_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+pub fn random_color_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let seed = uniforms.time as u64;
     let mut rng = StdRng::seed_from_u64(seed);
     let r = rng.gen_range(0..=255);
@@ -152,7 +131,7 @@ fn random_color_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     Color::new(r, g, b) * fragment.intensity
 }
 
-fn panda_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+pub fn panda_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let zoom = 50.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
@@ -164,7 +143,7 @@ fn panda_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     (if noise_value < spot_threshold { spot_color } else { base_color }) * fragment.intensity
 }
 
-fn cloud_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+pub fn cloud_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let zoom = 100.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
@@ -177,7 +156,7 @@ fn cloud_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     (if noise_value > cloud_threshold { cloud_color } else { sky_color }) * fragment.intensity
 }
 
-fn cellular_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+pub fn cellular_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let zoom = 30.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
