@@ -1,4 +1,4 @@
-use nalgebra_glm::{Vec3, Mat4};
+use nalgebra_glm::{Vec2, Vec3, Mat4};
 use minifb::{Key, Window, WindowOptions};
 use std::time::Duration;
 use std::f32::consts::PI;
@@ -19,7 +19,8 @@ use obj::Obj;
 use triangle::triangle;
 use shaders::vertex_shader;
 use fastnoise_lite::{FastNoiseLite, NoiseType};
-use crate::fragment::fragment_shader;
+use crate::fragment::{fragment_shader, Fragment, ring_shader};
+use crate::color::Color;
 
 pub struct Uniforms {
     model_matrix: Mat4,
@@ -121,7 +122,7 @@ fn main() {
 
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height);
     let mut window = Window::new(
-        "Rust Graphics - 3D Sphere",
+        "Planetary System",
         window_width,
         window_height,
         WindowOptions::default(),
@@ -146,6 +147,9 @@ fn main() {
     const STAR: u8 = 1;
     const ROCKY_PLANET: u8 = 2;
     const GAS_GIANT: u8 = 3;
+    const GAS_GIANT_WITH_RINGS: u8 = 4;
+    const PLANET_COLORFUL: u8 = 5;
+    const PLANET_EXOTIC: u8 = 6;
 
     // Variable para guardar el cuerpo celeste seleccionado
     let mut selected_object: u8 = STAR;
@@ -165,6 +169,12 @@ fn main() {
             selected_object = ROCKY_PLANET;
         } else if window.is_key_down(Key::Key3) {
             selected_object = GAS_GIANT;
+        } else if window.is_key_down(Key::Key4) {
+            selected_object = GAS_GIANT_WITH_RINGS;
+        } else if window.is_key_down(Key::Key5) {
+            selected_object = PLANET_COLORFUL;
+        } else if window.is_key_down(Key::Key6) {
+            selected_object = PLANET_EXOTIC;
         }
 
         framebuffer.clear();
@@ -194,6 +204,19 @@ fn main() {
                 framebuffer.set_current_color(0x00FFAA);
                 render(&mut framebuffer, &uniforms, &vertex_arrays, "gas_giant_shader");
             },
+            GAS_GIANT_WITH_RINGS => {
+                framebuffer.set_current_color(0x00FFAA);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "gas_giant_with_rings");
+                render_rings(&mut framebuffer, &uniforms);
+            },
+            PLANET_COLORFUL => {
+                framebuffer.set_current_color(0x00FFAA);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "colorful");
+            },
+            PLANET_EXOTIC => {
+                framebuffer.set_current_color(0x00FFAA);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "exotic");
+            },
             _ => {},
         }
 
@@ -202,6 +225,42 @@ fn main() {
             .unwrap();
 
         std::thread::sleep(frame_delay);
+    }
+}
+
+fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms) {
+    let ring_inner_radius = 1.2;
+    let ring_outer_radius = 1.8;
+
+    for x in -400..400 {
+        for y in -400..400 {
+            let xf = x as f32 / 100.0;
+            let yf = y as f32 / 100.0;
+            let distance = (xf.powi(2) + yf.powi(2)).sqrt();
+
+            if distance > ring_inner_radius && distance < ring_outer_radius {
+                let fragment = Fragment::new(
+                    Vec2::new(xf, yf),
+                    Color::new(0, 0, 0),
+                    1.0,
+                    Vec3::new(0.0, 0.0, 1.0),
+                    1.0,
+                    Vec3::new(xf, yf, 0.0),
+                );
+
+                // Aplicamos el shader de anillos
+                let ring_color = ring_shader(&fragment, uniforms);
+                
+                // Calcular posiciones de pantalla sin `viewport_matrix`
+                let x_screen = (xf * 100.0 + framebuffer.width as f32 / 2.0) as usize;
+                let y_screen = (yf * 100.0 + framebuffer.height as f32 / 2.0) as usize;
+                
+                if x_screen < framebuffer.width && y_screen < framebuffer.height {
+                    framebuffer.set_current_color(ring_color.to_hex());
+                    framebuffer.point(x_screen, y_screen, 1.0);
+                }
+            }
+        }
     }
 }
 
