@@ -45,6 +45,46 @@ impl Color {
             b: (self.b as f32 + (other.b as f32 - self.b as f32) * t).round() as u8,
         }
     }
+
+    pub fn is_black(&self) -> bool {
+        self.r == 0 && self.g == 0 && self.b == 0
+    }
+    
+    pub fn blend_normal(&self, blend: &Color) -> Color {
+        if blend.is_black() { *self } else { *blend }
+    }
+    
+    pub fn blend_multiply(&self, blend: &Color) -> Color {
+        Color::new(
+            ((self.r as f32 * blend.r as f32) / 255.0) as u8,
+            ((self.g as f32 * blend.g as f32) / 255.0) as u8,
+            ((self.b as f32 * blend.b as f32) / 255.0) as u8
+        )
+    }
+    
+    pub fn blend_add(&self, blend: &Color) -> Color {
+        Color::new(
+            (self.r as u16 + blend.r as u16).min(255) as u8,
+            (self.g as u16 + blend.g as u16).min(255) as u8,
+            (self.b as u16 + blend.b as u16).min(255) as u8
+        )
+    }
+    
+    pub fn blend_subtract(&self, blend: &Color) -> Color {
+        Color::new(
+            self.r.saturating_sub(blend.r),
+            self.g.saturating_sub(blend.g),
+            self.b.saturating_sub(blend.b)
+        )
+    }
+    
+    pub fn blend_screen(&self, blend: &Color) -> Color {
+        Color::new(
+            255 - ((255 - self.r as u16) * (255 - blend.r as u16) / 255) as u8,
+            255 - ((255 - self.g as u16) * (255 - blend.g as u16) / 255) as u8,
+            255 - ((255 - self.b as u16) * (255 - blend.b as u16) / 255) as u8
+        )
+    }    
 }
 
 impl Add for Color {

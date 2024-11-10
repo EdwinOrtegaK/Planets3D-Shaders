@@ -94,7 +94,7 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
         let y = fragment.position.y as usize;
         if x < framebuffer.width && y < framebuffer.height {
             // Llama a fragment_shader para calcular el color final del fragmento
-            let shaded_color = fragment_shader(&fragment, uniforms);
+            let shaded_color = fragment_shader(&fragment, uniforms, "static_pattern", "normal");
             let color = shaded_color.to_hex();
             framebuffer.set_current_color(color);
             framebuffer.point(x, y, fragment.depth);
