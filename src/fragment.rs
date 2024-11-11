@@ -33,14 +33,12 @@ impl Fragment {
 fn solar_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let time_factor = (uniforms.time as f32 * 0.05).sin() * 0.4 + 0.8; // Ajuste para evitar áreas muy oscuras
+    let time_factor = (uniforms.time as f32 * 0.05).sin() * 0.4 + 0.8;
 
-    // Variaciones en la superficie usando ruido para simular textura
     let zoom = 15.0;
-    let noise_value = uniforms.noise_open_simplex.get_noise_2d(x * zoom, y * zoom) * 0.3 + 0.7; // Reducción de variación
-    let surface_intensity = (0.9 + noise_value * 0.1) * time_factor; // Ajuste para eliminar la acumulación oscura
+    let noise_value = uniforms.noise_open_simplex.get_noise_2d(x * zoom, y * zoom) * 0.3 + 0.7;
+    let surface_intensity = (0.9 + noise_value * 0.1) * time_factor;
 
-    // Color base con variaciones para simular la superficie solar
     let r = (255.0 * surface_intensity) as u8;
     let g = (200.0 * surface_intensity) as u8;
     let b = (50.0 * surface_intensity) as u8;
@@ -121,7 +119,7 @@ fn gas_giant_with_rings_shader(fragment: &Fragment, uniforms: &Uniforms) -> Colo
     let combined_pattern = (pattern1 * 0.6 + pattern2 * 0.4).min(1.0);
 
     // Nuevos colores para distinguir este planeta
-    let r = (combined_pattern * 220.0) as u8; // Tonos más cálidos en rojo
+    let r = (combined_pattern * 220.0) as u8;
     let g = ((1.0 - combined_pattern) * 130.0 + 80.0) as u8;
     let b = 120;
 
@@ -147,22 +145,18 @@ pub fn ring_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     );
 
     let zoom = 10.0;
-    let noise_zoom = 10.0; // Factor para ajustar el ruido
+    let noise_zoom = 10.0;
 
-    // Generar el patrón de líneas horizontales
     let line_pattern = (position.y * zoom).sin().abs();
 
-    // Agregar ruido para variar el patrón
     let ruido = uniforms.noise_open_simplex.get_noise_3d(
         position.x * noise_zoom,
         position.y * noise_zoom,
         position.z * noise_zoom,
     );
 
-    // Mezclar el patrón de líneas con el ruido para crear variaciones
     let val_normalizado = (line_pattern * 0.7 + ruido * 0.3).clamp(0.0, 1.0);
 
-    // Interpolación entre colores para crear el efecto de bandas
     let color_intermediate = color1.lerp(&color2, val_normalizado);
     let final_color = color_intermediate.lerp(&color3, val_normalizado);
 
@@ -170,14 +164,12 @@ pub fn ring_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
 }
 
 pub fn planet_colorful(fragment: &Fragment, uniforms: &Uniforms) -> Color {
-    // Definimos los colores basados en el diseño de la segunda imagen
-    let color1 = Color::new(255, 223, 75);   // Amarillo claro
-    let color2 = Color::new(255, 165, 0);    // Naranja
-    let color3 = Color::new(238, 130, 238);  // Violeta
-    let color4 = Color::new(173, 216, 230);  // Azul claro
-    let color5 = Color::new(255, 105, 180);  // Rosa
+    let color1 = Color::new(255, 223, 75); 
+    let color2 = Color::new(255, 165, 0);  
+    let color3 = Color::new(238, 130, 238);
+    let color4 = Color::new(173, 216, 230); 
+    let color5 = Color::new(255, 105, 180);
 
-    // Posiciones y tiempo para animaciones y efectos de ruido
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
     let tiempo = (uniforms.time as f32) * 0.03;
@@ -189,7 +181,7 @@ pub fn planet_colorful(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     // Generación de ruido suave en la superficie
     let ruido = (x * 0.3 + tiempo).sin() * (y * 0.3).cos() * 0.5;
 
-    // Patrones de ondas en varias direcciones para simular las áreas de color
+    // Patrones de ondas en varias direcciones
     let patron1 = ((distancia + ruido) * frecuencia + (y + ruido) * 3.0).sin() * 0.5 + 0.5;
     let patron2 = ((distancia + ruido) * frecuencia * 0.8 - (x + ruido) * 3.0).sin() * 0.5 + 0.5;
     let patron3 = ((distancia + ruido) * frecuencia * 1.2 + (x + ruido) * 4.0).sin() * 0.5 + 0.5;
@@ -203,7 +195,6 @@ pub fn planet_colorful(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let ambient_intensity = 0.5;
     let ambient_color = Color::new(90, 60, 120);
 
-    // Multiplicamos por la intensidad del fragmento para asegurar brillo adecuado
     color_final * fragment.intensity + ambient_color * ambient_intensity
 }
 
@@ -254,16 +245,14 @@ pub fn planet_exotic_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
 }
 
 pub fn dark_red_planet_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
-    // Definir colores para la combinación negro y rojo
-    let color_negro = Color::new(10, 10, 10);       // Negro oscuro
-    let color_rojo = Color::new(150, 0, 0);         // Rojo oscuro
-    let color_rojo_brillante = Color::new(255, 50, 50); // Rojo brillante
+    let color_negro = Color::new(10, 10, 10);       
+    let color_rojo = Color::new(150, 0, 0);         
+    let color_rojo_brillante = Color::new(255, 50, 50);
 
     let position = fragment.vertex_position;
-    let zoom = 150.0; // Factor de escala para ajustar el tamaño de los patrones
-    let t = uniforms.time as f32 * 0.02; // Ajuste de animación lenta en el tiempo
+    let zoom = 150.0; 
+    let t = uniforms.time as f32 * 0.02; 
 
-    // Generación de ruido fractal con parámetros similares a la imagen
     let ruido = ruido_fractal(&uniforms.noise_open_simplex, position.x * zoom + t, position.y * zoom + t, 3, 2.0, 0.5);
 
     // Generar patrones de color con el ruido
@@ -282,31 +271,28 @@ pub fn dark_red_planet_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color
 }
 
 pub fn rocky_planet_with_moon_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
-    // Colores base para el planeta rocoso
-    let color_roca = Color::new(139, 69, 19);        // Marrón rocoso
-    let color_sombra = Color::new(105, 60, 45);      // Marrón oscuro para sombras
-    let color_mineral = Color::new(189, 183, 107);   // Amarillo para simular minerales
+    let color_roca = Color::new(139, 69, 19);        
+    let color_sombra = Color::new(105, 60, 45);      
+    let color_mineral = Color::new(189, 183, 107);   
 
     // Ajuste de la frecuencia para el patrón de mosaico
-    let zoom = 300.0;  // Ajustar el zoom para que el patrón de ruido sea más visible
+    let zoom = 300.0; 
     let x = fragment.vertex_position.x * zoom;
     let y = fragment.vertex_position.y * zoom;
 
-    // Obtener el valor de ruido celular con un tipo de distancia diferente para efectos cuadrados
     let noise_value = uniforms.noise_cellular.get_noise_2d(x, y);
-    let normalized_noise = ((noise_value + 1.0) * 0.5).clamp(0.0, 1.0); // Normalizar ruido entre [0, 1]
+    let normalized_noise = ((noise_value + 1.0) * 0.5).clamp(0.0, 1.0);
 
     // Definir el umbral para el efecto de fractura
-    let fracture_threshold = 0.35; // Ajustar para controlar el ancho de las grietas
+    let fracture_threshold = 0.35;
     let is_fracture = normalized_noise > fracture_threshold;
 
-    // Interpolación entre colores para el patrón rocoso y simular grietas
+    // Interpolación patrón rocoso y simular grietas
     let color_intermediate = color_roca.lerp(&color_sombra, normalized_noise * 0.8);
     let base_color = color_intermediate.lerp(&color_mineral, normalized_noise * 0.5);
 
-    // Si está en la zona de fractura, usar un color oscuro para simular una grieta
     let final_color = if is_fracture {
-        Color::new(60, 30, 10) // Color oscuro para las grietas
+        Color::new(60, 30, 10)
     } else {
         base_color
     };
@@ -319,18 +305,16 @@ fn moon_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let x = fragment.vertex_position.x * zoom;
     let y = fragment.vertex_position.y * zoom;
 
-    // Generación de ruido fractal con ajustes para intensificar los detalles
     let ruido = ruido_fractal(&uniforms.noise_open_simplex, x, y, 3, 2.76, 0.12);
 
     // Definimos colores oscuros y claros con un mayor contraste
-    let color_base = Color::new(50, 50, 50); // Gris muy oscuro
-    let color_sombra = Color::new(20, 20, 20); // Negro para los detalles más profundos
-    let color_claro = Color::new(150, 150, 150); // Gris claro para las zonas elevadas
+    let color_base = Color::new(50, 50, 50);
+    let color_sombra = Color::new(20, 20, 20); 
+    let color_claro = Color::new(150, 150, 150);
 
-    // Interpolamos los colores según el valor del ruido para crear un contraste marcado
     let factor = (ruido + 1.0) as f32 / 2.0;
-    let mut color_final = color_base.lerp(&color_sombra, factor * 0.8); // Mezcla con negro para zonas profundas
-    color_final = color_final.lerp(&color_claro, factor * 0.5); // Mezcla con gris claro para zonas elevadas
+    let mut color_final = color_base.lerp(&color_sombra, factor * 0.8); 
+    color_final = color_final.lerp(&color_claro, factor * 0.5);
 
     color_final * fragment.intensity
 }

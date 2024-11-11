@@ -123,7 +123,6 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
         let x = fragment.position.x as usize;
         let y = fragment.position.y as usize;
         if x < framebuffer.width && y < framebuffer.height {
-            // Llama a fragment_shader para calcular el color final del fragmento
             let shaded_color = fragment_shader(&fragment, uniforms, shader_type);
             let color = shaded_color.to_hex();
             framebuffer.set_current_color(color);
@@ -266,7 +265,6 @@ fn main() {
                 render(&mut framebuffer, &uniforms, &planet_vertex_array, "dark_red");
             },
             ROCKY_PLANET_WITH_MOON => {
-                // Renderizar el nuevo planeta rocoso
                 let planet_translation = translation;
                 let planet_model_matrix = create_model_matrix(planet_translation, scale, rotation);
                 uniforms.model_matrix = planet_model_matrix;
@@ -274,7 +272,6 @@ fn main() {
                 framebuffer.set_current_color(0xAAAAAA);
                 render(&mut framebuffer, &uniforms, &planet_vertex_array, "rocky_planet_with_moon_shader");
 
-                // Calcular posición de la luna para la órbita
                 let orbit_radius = 150.0;
                 let orbit_speed = 0.02;
                 let angle = time as f32 * orbit_speed;
@@ -319,10 +316,8 @@ fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms) {
                     Vec3::new(xf, yf, 0.0),
                 );
 
-                // Aplicamos el shader de anillos
                 let ring_color = ring_shader(&fragment, uniforms);
                 
-                // Calcular posiciones de pantalla sin `viewport_matrix`
                 let x_screen = (xf * 100.0 + framebuffer.width as f32 / 2.0) as usize;
                 let y_screen = (yf * 100.0 + framebuffer.height as f32 / 2.0) as usize;
                 
