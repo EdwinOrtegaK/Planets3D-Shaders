@@ -170,8 +170,11 @@ fn main() {
     let mut rotation = Vec3::new(0.0, 0.0, 0.0);
     let mut scale = 100.0f32;
 
-    let obj = Obj::load("assets/sphere.obj").expect("Failed to load obj");
-    let vertex_arrays = obj.get_vertex_array(); 
+    let planet_obj = Obj::load("assets/sphere.obj").expect("Failed to load obj");
+    let planet_vertex_array = planet_obj.get_vertex_array();
+
+    let ring_obj = Obj::load("assets/rings.obj").expect("Failed to load rings.obj");
+    let ring_vertex_array = ring_obj.get_vertex_array(); 
 
     let mut time = 0;
 
@@ -232,32 +235,35 @@ fn main() {
         match selected_object {
             STAR => {
                 framebuffer.set_current_color(0xFFDDDD);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "solar_surface");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "solar_surface");
             },
             ROCKY_PLANET => {
                 framebuffer.set_current_color(0xAAAAAA);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "rocky_planet_shader");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "rocky_planet_shader");
             },
             GAS_GIANT => {
                 framebuffer.set_current_color(0x00FFAA);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "gas_giant_shader");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "gas_giant_shader");
             },
             GAS_GIANT_WITH_RINGS => {
                 framebuffer.set_current_color(0x00FFAA);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "gas_giant_with_rings");
-                render_rings(&mut framebuffer, &uniforms);
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "gas_giant_with_rings");
+
+                let ring_model_matrix = create_model_matrix(translation, scale * 1.2, rotation);
+                uniforms.model_matrix = ring_model_matrix;
+                render(&mut framebuffer, &uniforms, &ring_vertex_array, "ring");
             },
             PLANET_COLORFUL => {
                 framebuffer.set_current_color(0x00FFAA);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "colorful");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "colorful");
             },
             PLANET_EXOTIC => {
                 framebuffer.set_current_color(0x00FFAA);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "exotic");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "exotic");
             },
             DARK_RED => {
                 framebuffer.set_current_color(0x00FFAA);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "dark_red");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "dark_red");
             },
             ROCKY_PLANET_WITH_MOON => {
                 // Renderizar el nuevo planeta rocoso
@@ -266,7 +272,7 @@ fn main() {
                 uniforms.model_matrix = planet_model_matrix;
 
                 framebuffer.set_current_color(0xAAAAAA);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "rocky_planet_with_moon_shader");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "rocky_planet_with_moon_shader");
 
                 // Calcular posición de la luna para la órbita
                 let orbit_radius = 150.0;
@@ -280,7 +286,7 @@ fn main() {
                 let moon_model_matrix = create_model_matrix(moon.position, moon.scale, moon.rotation);
                 uniforms.model_matrix = moon_model_matrix;
                 framebuffer.set_current_color(0x888888);
-                render(&mut framebuffer, &uniforms, &vertex_arrays, "moon_shader");
+                render(&mut framebuffer, &uniforms, &planet_vertex_array, "moon_shader");
             },
             _ => {},
         }
@@ -293,6 +299,7 @@ fn main() {
     }
 }
 
+/*
 fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms) {
     let ring_inner_radius = 1.2;
     let ring_outer_radius = 1.8;
@@ -327,7 +334,7 @@ fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms) {
             }
         }
     }
-}
+}*/
 
 fn handle_input(window: &Window, translation: &mut Vec3, rotation: &mut Vec3, scale: &mut f32) {
     let move_speed = 10.0; 

@@ -147,7 +147,7 @@ pub fn ring_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     );
 
     let zoom = 10.0;
-    let noise_zoom = 50.0; // Factor para ajustar el ruido
+    let noise_zoom = 10.0; // Factor para ajustar el ruido
 
     // Generar el patrón de líneas horizontales
     let line_pattern = (position.y * zoom).sin().abs();
@@ -166,7 +166,7 @@ pub fn ring_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let color_intermediate = color1.lerp(&color2, val_normalizado);
     let final_color = color_intermediate.lerp(&color3, val_normalizado);
 
-    final_color * fragment.intensity
+    final_color * 0.9
 }
 
 pub fn planet_colorful(fragment: &Fragment, uniforms: &Uniforms) -> Color {
