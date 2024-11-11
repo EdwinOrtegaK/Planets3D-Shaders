@@ -26,7 +26,7 @@ Asegúrate de tener Rust y Cargo instalados en tu sistema. Puedes verificarlo ej
     ```
 3. **Instala las dependencias**:
     ```bash
-    cargo add minifb nalgebra-glm tobj
+    cargo add minifb nalgebra-glm tobj rand fastnoise-lite
     ```
 3. **Compila y ejecuta el proyecto**:
     ```bash
