@@ -299,7 +299,6 @@ fn main() {
     }
 }
 
-/*
 fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms) {
     let ring_inner_radius = 1.2;
     let ring_outer_radius = 1.8;
@@ -334,7 +333,7 @@ fn render_rings(framebuffer: &mut Framebuffer, uniforms: &Uniforms) {
             }
         }
     }
-}*/
+}
 
 fn handle_input(window: &Window, translation: &mut Vec3, rotation: &mut Vec3, scale: &mut f32) {
     let move_speed = 10.0; 
