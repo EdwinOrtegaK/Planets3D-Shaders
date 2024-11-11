@@ -18,7 +18,7 @@ use vertex::Vertex;
 use obj::Obj;
 use triangle::triangle;
 use shaders::vertex_shader;
-use fastnoise_lite::{FastNoiseLite, NoiseType};
+use fastnoise_lite::{FastNoiseLite, NoiseType, CellularDistanceFunction};
 use crate::fragment::{fragment_shader, Fragment, ring_shader};
 use crate::color::Color;
 
@@ -28,7 +28,33 @@ pub struct Uniforms {
     projection_matrix: Mat4,
     viewport_matrix: Mat4,
     time: u32,
-    noise: FastNoiseLite
+    noise_open_simplex: FastNoiseLite,
+    noise_cellular: FastNoiseLite, 
+}
+
+pub struct Moon {
+    pub position: Vec3,
+    pub scale: f32,
+    pub rotation: Vec3,
+}
+
+fn create_uniforms() -> Uniforms {
+    let mut noise_open_simplex = FastNoiseLite::with_seed(1337);
+    noise_open_simplex.set_noise_type(Some(NoiseType::OpenSimplex2));
+    
+    let mut noise_cellular = FastNoiseLite::with_seed(1337);
+    noise_cellular.set_noise_type(Some(NoiseType::Cellular));
+    noise_cellular.set_cellular_distance_function(Some(CellularDistanceFunction::Manhattan));
+
+    Uniforms {
+        model_matrix: Mat4::identity(),
+        view_matrix: Mat4::identity(),
+        projection_matrix: Mat4::identity(),
+        viewport_matrix: Mat4::identity(),
+        time: 0,
+        noise_open_simplex,
+        noise_cellular,
+    }
 }
 
 fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
@@ -107,9 +133,15 @@ fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
     
 }
 
-fn create_noise() -> FastNoiseLite {
+fn create_open_simplex_noise() -> FastNoiseLite {
     let mut noise = FastNoiseLite::with_seed(1337);
     noise.set_noise_type(Some(NoiseType::OpenSimplex2));
+    noise
+}
+
+fn create_cellular_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(1337);
+    noise.set_noise_type(Some(NoiseType::Cellular));
     noise
 }
 
@@ -150,9 +182,17 @@ fn main() {
     const GAS_GIANT_WITH_RINGS: u8 = 4;
     const PLANET_COLORFUL: u8 = 5;
     const PLANET_EXOTIC: u8 = 6;
+    const DARK_RED: u8 = 7;
+    const ROCKY_PLANET_WITH_MOON: u8 = 8;
 
     // Variable para guardar el cuerpo celeste seleccionado
     let mut selected_object: u8 = STAR;
+
+    let mut moon = Moon {
+        position: Vec3::new(0.0, 0.0, 0.0),
+        scale: 30.0,
+        rotation: Vec3::new(0.0, 0.0, 0.0),
+    };
 
     while window.is_open() {
         if window.is_key_down(Key::Escape) {
@@ -175,20 +215,18 @@ fn main() {
             selected_object = PLANET_COLORFUL;
         } else if window.is_key_down(Key::Key6) {
             selected_object = PLANET_EXOTIC;
+        } else if window.is_key_down(Key::Key7) {
+            selected_object = DARK_RED;
+        } else if window.is_key_down(Key::Key8) {
+            selected_object = ROCKY_PLANET_WITH_MOON;
         }
 
         framebuffer.clear();
 
         let model_matrix = create_model_matrix(translation, scale, rotation);
-        let noise = create_noise();
-        let uniforms = Uniforms {
-            model_matrix,
-            view_matrix: Mat4::identity(),
-            projection_matrix: Mat4::identity(),
-            viewport_matrix: Mat4::identity(),
-            time,
-            noise
-        };
+        let mut uniforms = create_uniforms();
+        uniforms.model_matrix = model_matrix;
+        uniforms.time = time;
 
         // Renderizamos el objeto seleccionado con shaders específicos
         match selected_object {
@@ -216,6 +254,33 @@ fn main() {
             PLANET_EXOTIC => {
                 framebuffer.set_current_color(0x00FFAA);
                 render(&mut framebuffer, &uniforms, &vertex_arrays, "exotic");
+            },
+            DARK_RED => {
+                framebuffer.set_current_color(0x00FFAA);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "dark_red");
+            },
+            ROCKY_PLANET_WITH_MOON => {
+                // Renderizar el nuevo planeta rocoso
+                let planet_translation = translation;
+                let planet_model_matrix = create_model_matrix(planet_translation, scale, rotation);
+                uniforms.model_matrix = planet_model_matrix;
+
+                framebuffer.set_current_color(0xAAAAAA);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "rocky_planet_with_moon_shader");
+
+                // Calcular posición de la luna para la órbita
+                let orbit_radius = 150.0;
+                let orbit_speed = 0.02;
+                let angle = time as f32 * orbit_speed;
+
+                moon.position.x = planet_translation.x + orbit_radius * angle.cos();
+                moon.position.y = planet_translation.y + orbit_radius * angle.sin();
+
+                // Renderizar la luna
+                let moon_model_matrix = create_model_matrix(moon.position, moon.scale, moon.rotation);
+                uniforms.model_matrix = moon_model_matrix;
+                framebuffer.set_current_color(0x888888);
+                render(&mut framebuffer, &uniforms, &vertex_arrays, "moon_shader");
             },
             _ => {},
         }

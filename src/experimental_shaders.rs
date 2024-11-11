@@ -135,7 +135,7 @@ pub fn panda_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let zoom = 50.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let noise_value = uniforms.noise.get_noise_2d(x * zoom, y * zoom);
+    let noise_value = uniforms.noise_open_simplex.get_noise_2d(x * zoom, y * zoom);
     let spot_threshold = 0.5;
     let spot_color = Color::new(255, 255, 255);
     let base_color = Color::new(0, 0, 0);
@@ -148,7 +148,7 @@ pub fn cloud_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
     let t = uniforms.time as f32 * 0.5;
-    let noise_value = uniforms.noise.get_noise_2d(x * zoom + t, y * zoom);
+    let noise_value = uniforms.noise_open_simplex.get_noise_2d(x * zoom + t, y * zoom);
     let cloud_threshold = 0.5;
     let cloud_color = Color::new(255, 255, 255);
     let sky_color = Color::new(30, 97, 145);
@@ -160,7 +160,7 @@ pub fn cellular_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let zoom = 30.0;
     let x = fragment.vertex_position.x;
     let y = fragment.vertex_position.y;
-    let cell_noise_value = uniforms.noise.get_noise_2d(x * zoom, y * zoom).abs();
+    let cell_noise_value = uniforms.noise_cellular.get_noise_2d(x * zoom, y * zoom).abs();
     let cell_color_1 = Color::new(85, 107, 47);
     let cell_color_2 = Color::new(124, 252, 0);
     let cell_color_3 = Color::new(34, 139, 34);
